@@ -1,4 +1,5 @@
 mod app;
+mod pipeline;
 mod renderer;
 
 use renderer::Renderer;

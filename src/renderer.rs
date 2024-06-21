@@ -2,11 +2,13 @@ use winit::window::Window;
 
 use log::info;
 
+use crate::pipeline;
+
 pub struct Renderer<'a> {
-    surface: wgpu::Surface<'a>,
-    device: wgpu::Device,
-    queue: wgpu::Queue,
-    config: wgpu::SurfaceConfiguration,
+    pub surface: wgpu::Surface<'a>,
+    pub device: wgpu::Device,
+    pub queue: wgpu::Queue,
+    pub config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
 
     // there are unsafe references so a reference here ensures a drop
@@ -97,7 +99,9 @@ impl<'a> Renderer<'a> {
                 label: Some("Render Encoder"),
             });
 
-        let _render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+        let pipeline = pipeline::create(&self, wgpu::include_wgsl!("test.wgsl"));
+
+        let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Color Pass"),
             color_attachments: &[Some(wgpu::RenderPassColorAttachment {
                 view: &view,
@@ -116,7 +120,10 @@ impl<'a> Renderer<'a> {
             ..Default::default()
         });
 
-        drop(_render_pass);
+        render_pass.set_pipeline(&pipeline);
+        render_pass.draw(0..3, 0..1);
+
+        drop(render_pass);
 
         // Has to be an iterator, hence once
         self.queue.submit(std::iter::once(encoder.finish()));
