@@ -1,14 +1,15 @@
+use gltf::scene;
 use winit::window::Window;
 
 use log::info;
 
-use crate::pipeline;
+use crate::{graph::create_graph, include_gltf, pipeline};
 
-pub struct Renderer<'a> {
+pub struct Configuration<'a> {
     pub surface: wgpu::Surface<'a>,
     pub device: wgpu::Device,
     pub queue: wgpu::Queue,
-    pub config: wgpu::SurfaceConfiguration,
+    pub surface_config: wgpu::SurfaceConfiguration,
     pub size: winit::dpi::PhysicalSize<u32>,
 
     // there are unsafe references so a reference here ensures a drop
@@ -16,7 +17,14 @@ pub struct Renderer<'a> {
     pub window: &'a Window,
 }
 
-impl<'a> Renderer<'a> {
+/// A renderer, assuming that there is a surface to draw on
+pub struct RendererState<'a> {
+    pub config: Configuration<'a>,
+
+    pub pipeline: wgpu::RenderPipeline,
+}
+
+impl<'a> RendererState<'a> {
     pub async fn new(window: &'a Window) -> Self {
         let size = window.inner_size();
 
@@ -58,48 +66,58 @@ impl<'a> Renderer<'a> {
             desired_maximum_frame_latency: 2,
         };
 
-        Self {
+        let config = Configuration {
             window,
             surface,
             device,
             queue,
-            config,
+            surface_config: config,
             size,
-        }
+        };
+
+        let pipeline = pipeline::create(&config, wgpu::include_wgsl!("test.wgsl"));
+        let gltf = include_gltf!("test.gltf");
+        create_graph(gltf, &config);
+
+        Self { config, pipeline }
     }
 
     pub fn window(&self) -> &Window {
-        &self.window
+        &self.config.window
     }
 
     // copy of https://sotrh.github.io/learn-wgpu/beginner/tutorial2-surface/#resize
     pub fn resize(&mut self, new_size: winit::dpi::PhysicalSize<u32>) {
+        let config = &mut self.config;
+
         info!(
             "resize to width: {} height: {}!",
             new_size.width, new_size.height
         );
 
         if new_size.width > 0 && new_size.height > 0 {
-            self.size = new_size;
-            self.config.width = new_size.width;
-            self.config.height = new_size.height;
-            self.surface.configure(&self.device, &self.config);
+            config.size = new_size;
+            config.surface_config.width = new_size.width;
+            config.surface_config.height = new_size.height;
+            config
+                .surface
+                .configure(&config.device, &config.surface_config);
         }
     }
 
     pub fn draw(&mut self) -> Result<(), wgpu::SurfaceError> {
-        let output = self.surface.get_current_texture()?;
+        let config = &mut self.config;
+
+        let output = config.surface.get_current_texture()?;
         let view = output
             .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
 
-        let mut encoder = self
+        let mut encoder = config
             .device
             .create_command_encoder(&wgpu::CommandEncoderDescriptor {
                 label: Some("Render Encoder"),
             });
-
-        let pipeline = pipeline::create(&self, wgpu::include_wgsl!("test.wgsl"));
 
         let mut render_pass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
             label: Some("Color Pass"),
@@ -120,13 +138,13 @@ impl<'a> Renderer<'a> {
             ..Default::default()
         });
 
-        render_pass.set_pipeline(&pipeline);
+        render_pass.set_pipeline(&self.pipeline);
         render_pass.draw(0..3, 0..1);
 
         drop(render_pass);
 
         // Has to be an iterator, hence once
-        self.queue.submit(std::iter::once(encoder.finish()));
+        config.queue.submit(std::iter::once(encoder.finish()));
         output.present();
 
         Ok(())

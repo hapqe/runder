@@ -1,14 +1,14 @@
-use crate::renderer::Renderer;
+use crate::renderer::{Configuration, RendererState};
 
-/// used with wgpu::include_wgsl!("shader.wgsl")
+/// intended to be used with `wgpu::include_wgsl!("shader.wgsl")`
 pub fn create(
-    renderer: &Renderer,
+    config: &Configuration,
     description: wgpu::ShaderModuleDescriptor,
 ) -> wgpu::RenderPipeline {
     let label = description.label;
-    let shader = renderer.device.create_shader_module(description);
+    let shader = config.device.create_shader_module(description);
 
-    let layout = renderer
+    let layout = config
         .device
         .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label: label.map(|l| format!("{l} pipeline layout")).as_deref(),
@@ -16,11 +16,11 @@ pub fn create(
             push_constant_ranges: &[],
         });
 
-    // from https://sotrh.github.io/learn-wgpu/beginner/tutorial3-pipeline/#how-do-we-use-the-shaders
-    let pipeline = renderer
+    // modification of https://sotrh.github.io/learn-wgpu/beginner/tutorial3-pipeline/#how-do-we-use-the-shaders
+    let pipeline = config
         .device
         .create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Render Pipeline"),
+            label: label.map(|l| format!("{l} pipeline")).as_deref(),
             layout: Some(&layout),
             vertex: wgpu::VertexState {
                 module: &shader,
@@ -33,7 +33,7 @@ pub fn create(
                 module: &shader,
                 entry_point: "fs_main",
                 targets: &[Some(wgpu::ColorTargetState {
-                    format: renderer.config.format,
+                    format: config.surface_config.format,
                     blend: Some(wgpu::BlendState::REPLACE),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
