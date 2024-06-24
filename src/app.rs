@@ -1,6 +1,6 @@
-use log::{error, warn};
+use log::{error, info, warn};
 use winit::{
-    event::{self, Event, WindowEvent},
+    event::{Event, WindowEvent},
     event_loop::EventLoopBuilder,
     window::WindowBuilder,
 };
@@ -20,7 +20,7 @@ pub async fn init() {
 
     let mut renderer = RendererState::new(&window).await;
 
-    event_loop.run(move |event, target| match event {
+    let render_loop_result = event_loop.run(move |event, target| match event {
         // Close window, uppon requesting
         Event::WindowEvent { window_id, event } if window_id == renderer.config.window.id() => {
             match event {
@@ -57,4 +57,6 @@ pub async fn init() {
         }
         _ => (),
     });
+
+    info!("Render loop result: {:?}", render_loop_result);
 }

@@ -1,17 +1,18 @@
-use crate::renderer::{Configuration, RendererState};
+use crate::renderer::Configuration;
 
 /// intended to be used with `wgpu::include_wgsl!("shader.wgsl")`
 pub fn create(
     config: &Configuration,
+    vertex_buffer_layouts: &[wgpu::VertexBufferLayout],
     description: wgpu::ShaderModuleDescriptor,
+    label: Option<&str>,
 ) -> wgpu::RenderPipeline {
-    let label = description.label;
     let shader = config.device.create_shader_module(description);
 
     let layout = config
         .device
         .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: label.map(|l| format!("{l} pipeline layout")).as_deref(),
+            label,
             bind_group_layouts: &[],
             push_constant_ranges: &[],
         });
@@ -25,9 +26,9 @@ pub fn create(
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "vs_main",
-                buffers: &[],
+                buffers: vertex_buffer_layouts,
                 // Additional compilation options
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                compilation_options: Default::default(),
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -38,7 +39,7 @@ pub fn create(
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
                 // Additional compilation options
-                compilation_options: wgpu::PipelineCompilationOptions::default(),
+                compilation_options: Default::default(),
             }),
             primitive: wgpu::PrimitiveState {
                 topology: wgpu::PrimitiveTopology::TriangleList,

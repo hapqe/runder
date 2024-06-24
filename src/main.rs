@@ -1,10 +1,10 @@
 mod app;
-mod gltf_helper;
+mod buffer_info;
 mod graph;
 mod pipeline;
+mod primitive;
 mod renderer;
-
-use renderer::RendererState;
+mod view;
 
 fn main() {
     // create a window

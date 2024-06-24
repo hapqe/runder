@@ -1,9 +1,8 @@
-use gltf::scene;
 use winit::window::Window;
 
 use log::info;
 
-use crate::{graph::create_graph, include_gltf, pipeline};
+use crate::graph::Graph;
 
 pub struct Configuration<'a> {
     pub surface: wgpu::Surface<'a>,
@@ -21,7 +20,7 @@ pub struct Configuration<'a> {
 pub struct RendererState<'a> {
     pub config: Configuration<'a>,
 
-    pub pipeline: wgpu::RenderPipeline,
+    pub graph: Graph,
 }
 
 impl<'a> RendererState<'a> {
@@ -75,11 +74,9 @@ impl<'a> RendererState<'a> {
             size,
         };
 
-        let pipeline = pipeline::create(&config, wgpu::include_wgsl!("test.wgsl"));
-        let gltf = include_gltf!("test.gltf");
-        create_graph(gltf, &config);
+        let graph = Graph::create(&config);
 
-        Self { config, pipeline }
+        Self { config, graph }
     }
 
     pub fn window(&self) -> &Window {
@@ -126,7 +123,7 @@ impl<'a> RendererState<'a> {
                 resolve_target: None,
                 ops: wgpu::Operations {
                     load: wgpu::LoadOp::Clear(wgpu::Color {
-                        r: 0.4,
+                        r: 0.8,
                         g: 0.2,
                         b: 0.3,
                         a: 1.0,
@@ -138,8 +135,9 @@ impl<'a> RendererState<'a> {
             ..Default::default()
         });
 
-        render_pass.set_pipeline(&self.pipeline);
-        render_pass.draw(0..3, 0..1);
+        for primitive in self.graph.primitives() {
+            primitive.render(&mut render_pass, &self.graph.buffer_info());
+        }
 
         drop(render_pass);
 
