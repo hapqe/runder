@@ -4,6 +4,7 @@ use crate::renderer::Configuration;
 pub fn create(
     config: &Configuration,
     vertex_buffer_layouts: &[wgpu::VertexBufferLayout],
+    bind_group_layouts: &[&wgpu::BindGroupLayout],
     description: wgpu::ShaderModuleDescriptor,
     label: Option<&str>,
 ) -> wgpu::RenderPipeline {
@@ -13,7 +14,7 @@ pub fn create(
         .device
         .create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
             label,
-            bind_group_layouts: &[],
+            bind_group_layouts,
             push_constant_ranges: &[],
         });
 

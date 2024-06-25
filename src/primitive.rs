@@ -1,9 +1,4 @@
-use crate::{
-    buffer_info::BufferInfo,
-    pipeline,
-    renderer::Configuration,
-    view::{ViewInfo, ViewType},
-};
+use crate::{buffer_info::BufferInfo, pipeline, renderer::Configuration, view::ViewType};
 
 pub struct Primitive {
     pipeline: wgpu::RenderPipeline,
@@ -15,6 +10,7 @@ impl Primitive {
         config: &Configuration,
         primitive: &gltf::Primitive,
         mesh: &gltf::Mesh,
+        bind_group_layouts: &[&wgpu::BindGroupLayout],
         buffer_info: &BufferInfo,
     ) -> Self {
         let attributes = primitive.attributes();
@@ -61,6 +57,7 @@ impl Primitive {
         let pipeline = pipeline::create(
             &config,
             &layouts,
+            bind_group_layouts,
             wgpu::include_wgsl!("test.wgsl"),
             Some(&label),
         );
