@@ -32,7 +32,7 @@ pub struct Vec3 {
 
 impl Into<Vec3> for [f32; 3] {
     fn into(self) -> Vec3 {
-        Vec3::new(self[0], self[1], self[2])
+        Vec3::new(self[0], self[1], -self[2])
     }
 }
 
@@ -54,10 +54,10 @@ impl Vec3 {
     /// <br>
     /// Reference: http://marc-b-reynolds.github.io/math/2017/04/18/TaitEuler.html#mjx-eqn:cos2_1
     pub fn euler_from_quaternion_data(q: [f32; 4]) -> Vec3 {
-        let x = q[0];
-        let y = q[1];
-        let z = q[2];
-        let w = q[3];
+        let x = -q[2]; // Due to
+        let y = -q[1]; // blenders
+        let z = -q[0]; // flipped
+        let w = q[3]; // coordinates!
 
         let t0 = (x + z) * (x - z); // x^2 - z^2
         let t1 = (w + y) * (w - y); // w^2 - y^2

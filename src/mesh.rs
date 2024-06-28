@@ -1,16 +1,11 @@
-use gltf::Node;
-use wgpu::util::DeviceExt;
-
 use crate::{
     bindgroup::{self, BindGroupEntryInfo, BindGroupInfo},
-    buffer_info::BufferInfo,
-    math::{
-        mat::Mat4,
-        transform::{self, Transform},
-        vec::Vec3,
-    },
+    camera::Camera,
+    math::{mat::Mat4, transform::Transform, vec::Vec3},
+    model_buffer_info::ModelBufferIndo,
     primitive::Primitive,
     renderer::Configuration,
+    uniform_buffer::create_uniform_buffer,
 };
 
 pub struct Mesh {
@@ -22,10 +17,13 @@ pub struct Mesh {
 impl Mesh {
     pub fn new(
         config: &Configuration,
+        camera: &Camera,
         mesh: gltf::Mesh,
-        buffer_info: &BufferInfo,
-        node: Node,
+        node: gltf::Node,
+        buffer_info: &ModelBufferIndo,
     ) -> Self {
+        let name = node.name().unwrap_or("Unnamed Mesh");
+
         let decomposed = node.transform().decomposed();
         let position = decomposed.0.into();
         let rotation = Vec3::euler_from_quaternion_data(decomposed.1);
@@ -33,13 +31,11 @@ impl Mesh {
 
         let transform = Transform::new(position, rotation, scale);
 
-        let buffer = config
-            .device
-            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
-                label: Some("Camera Buffer"),
-                contents: &Mat4::transform(&transform).data(),
-                usage: wgpu::BufferUsages::UNIFORM | wgpu::BufferUsages::COPY_DST,
-            });
+        let buffer = create_uniform_buffer(
+            config,
+            &format!("Transform buffer for '{}'", name),
+            &Mat4::transform(&transform).bytes(),
+        );
 
         let transform_bind_group = bindgroup::create_bindgroup(
             config,
@@ -51,10 +47,7 @@ impl Mesh {
                     size: None,
                 }),
             )],
-            Some(&format!(
-                "Transform bind group of '{}'",
-                node.name().unwrap_or("Unnamed Node")
-            )),
+            &format!("Transform bind group of '{}'", name),
         );
 
         let primitives = mesh
@@ -64,7 +57,7 @@ impl Mesh {
                     config,
                     &primitive,
                     &mesh,
-                    &[&transform_bind_group.layout],
+                    &[&transform_bind_group.layout, &camera.bind_group().layout],
                     buffer_info,
                 )
             })
@@ -80,7 +73,7 @@ impl Mesh {
     pub fn render<'a>(
         &'a self,
         render_pass: &mut wgpu::RenderPass<'a>,
-        buffer_info: &'a BufferInfo,
+        buffer_info: &'a ModelBufferIndo,
     ) {
         render_pass.set_bind_group(0, &self.transform_bind_group.group, &[]);
 

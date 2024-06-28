@@ -1,7 +1,10 @@
 // Vertex shader
 
-@group(0) @binding(0) // 1.
+@group(0) @binding(0)
 var<uniform> transform: mat4x4<f32>;
+
+@group(1) @binding(0)
+var<uniform> projection: mat4x4<f32>;
 
 struct VertexInput {
     @location(0) position: vec3<f32>,
@@ -20,7 +23,7 @@ fn vs_main(
 ) -> VertexOutput {
     var out: VertexOutput;
     out.tex_coords = in.tex_coords;
-    out.clip_position = transform * vec4<f32>(in.position, 1.0);
+    out.clip_position = projection * transform * vec4<f32>(in.position, 1.0);
     return out;
 }
 

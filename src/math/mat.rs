@@ -40,6 +40,10 @@ impl Default for Mat4 {
 }
 
 impl Mat4 {
+    pub fn new(x: Vec4, y: Vec4, z: Vec4, w: Vec4) -> Self {
+        Self { x, y, z, w }
+    }
+
     /// rotating a matrix, according to Tait-Bryan angles in Z -> Y -> X order in radiants
     /// <br>
     /// Reference: https://en.wikipedia.org/wiki/Euler_angles#Rotation_matrix
@@ -89,7 +93,7 @@ impl Mat4 {
         }
     }
 
-    pub fn data(self) -> Vec<u8> {
+    pub fn bytes(self) -> Vec<u8> {
         let floats = [
             self.x.x, self.x.y, self.x.z, self.x.w, self.y.x, self.y.y, self.y.z, self.y.w,
             self.z.x, self.z.y, self.z.z, self.z.w, self.w.x, self.w.y, self.w.z, self.w.w,

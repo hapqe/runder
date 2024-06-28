@@ -24,7 +24,7 @@ impl<'a> BindGroupEntryInfo<'a> {
 pub fn create_bindgroup(
     config: &Configuration,
     entries: &[BindGroupEntryInfo],
-    label: Option<&str>,
+    label: &str,
 ) -> BindGroupInfo {
     let layout = config
         .device
@@ -43,9 +43,7 @@ pub fn create_bindgroup(
                     count: None,
                 })
                 .collect::<Vec<_>>(),
-            label: label
-                .map(|l| format!("bindgroup layout for '{}'", l))
-                .as_deref(),
+            label: Some(&format!("Bindgroup layout for '{}'", label)),
         });
 
     let bind_group = config.device.create_bind_group(&wgpu::BindGroupDescriptor {
@@ -58,7 +56,7 @@ pub fn create_bindgroup(
                 resource: entry.resource.clone(),
             })
             .collect::<Vec<_>>(),
-        label: label.map(|l| format!("bindgroup for '{}'", l)).as_deref(),
+        label: Some(&format!("Bindgroup for '{}'", label)),
     });
 
     BindGroupInfo {

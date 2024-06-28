@@ -135,6 +135,8 @@ impl<'a> RendererState<'a> {
             ..Default::default()
         });
 
+        render_pass.set_bind_group(1, &self.graph.camera().bind_group().group, &[]);
+
         for primitive in self.graph.meshes() {
             primitive.render(&mut render_pass, &self.graph.buffer_info());
         }

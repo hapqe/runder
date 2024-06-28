@@ -1,4 +1,6 @@
-use crate::{buffer_info::BufferInfo, pipeline, renderer::Configuration, view::ViewType};
+use crate::{
+    pipeline, renderer::Configuration, model_buffer_info::ModelBufferIndo, view::ViewType,
+};
 
 pub struct Primitive {
     pipeline: wgpu::RenderPipeline,
@@ -11,7 +13,7 @@ impl Primitive {
         primitive: &gltf::Primitive,
         mesh: &gltf::Mesh,
         bind_group_layouts: &[&wgpu::BindGroupLayout],
-        buffer_info: &BufferInfo,
+        buffer_info: &ModelBufferIndo,
     ) -> Self {
         let attributes = primitive.attributes();
 
@@ -80,7 +82,7 @@ impl Primitive {
     pub fn render<'a>(
         &'a self,
         render_pass: &mut wgpu::RenderPass<'a>,
-        buffer_info: &'a BufferInfo,
+        buffer_info: &'a ModelBufferIndo,
     ) {
         render_pass.set_pipeline(&self.pipeline);
 

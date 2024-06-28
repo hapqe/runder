@@ -8,7 +8,7 @@ use crate::{
 };
 
 #[derive(Getters)]
-pub struct BufferInfo {
+pub struct ModelBufferIndo {
     #[getset(get = "pub")]
     vertex_buffer: wgpu::Buffer,
     #[getset(get = "pub")]
@@ -17,7 +17,7 @@ pub struct BufferInfo {
     views: Vec<ViewType>,
 }
 
-impl BufferInfo {
+impl ModelBufferIndo {
     pub fn new(config: &Configuration, gltf: &Gltf, raw_buffer_data: &[u8]) -> Self {
         let mut vertex_buffer_data = Vec::new();
         let mut index_buffer_data = Vec::new();

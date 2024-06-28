@@ -1,5 +1,6 @@
 use super::vec::Vec3;
 
+#[derive(Clone, Debug)]
 pub struct Transform {
     pub position: Vec3,
     pub rotation: Vec3,
@@ -12,6 +13,16 @@ impl Transform {
             position,
             rotation,
             scale,
+        }
+    }
+}
+
+impl Default for Transform {
+    fn default() -> Self {
+        Self {
+            position: Default::default(),
+            rotation: Default::default(),
+            scale: Vec3::one(),
         }
     }
 }
